@@ -33,7 +33,7 @@ public class GamePanel extends JPanel implements Runnable {
         {'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', 'N'},
         {'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'}
     };
-
+    
     final int tileSize = 32;
     int maxScreenCol, maxScreenRow, screenWidth, screenHeight;
     
