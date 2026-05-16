@@ -46,6 +46,7 @@ public class GamePanel extends JPanel implements Runnable {
     final int maxScreenRow = map1.length;
     final int screenWidth = tileSize * maxScreenCol;
     final int screenHeight = tileSize * maxScreenRow;
+    KeyHandler keyH = new KeyHandler();
     Image Tanah;
     Image Player;
     Image NPC;
@@ -66,6 +67,8 @@ public class GamePanel extends JPanel implements Runnable {
     Image playerimg;
 
     public GamePanel() {
+        this.addKeyListener(keyH);
+        this.setFocusable(true);
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLUE);
         this.setDoubleBuffered(true); // , sebuah teknik yang mencegah kedipan layar dengan merender grafik kompleks
@@ -95,6 +98,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         loadAssets();
+        player = new Player(this, keyH, playerimg, playerx, playery);
     }
 
     public void startGameThread() {
@@ -102,51 +106,75 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
+    public int getTileSize() {
+        return tileSize;
+    }
+
+    public boolean isWallTile(int col, int row) {
+        if (col < 0 || col >= maxScreenCol || row < 0 || row >= maxScreenRow) {
+            return true;
+        }
+        return map1[row][col] == '1';
+    }
+
+    public boolean collidesWithWall(int nextX, int nextY) {
+        int left = nextX / tileSize;
+        int right = (nextX + tileSize - 1) / tileSize;
+        int top = nextY / tileSize;
+        int bottom = (nextY + tileSize - 1) / tileSize;
+
+        return isWallTile(left, top) || isWallTile(right, top) ||
+               isWallTile(left, bottom) || isWallTile(right, bottom);
+    }
+
     @Override
     public void run() {
+        double drawInterval = 1000000000 / 60; // 60 FPS
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long currentTime;
+
         while (gameThread != null) {
+            currentTime = System.nanoTime();
+            delta += (currentTime - lastTime) / drawInterval;
+            lastTime = currentTime;
 
-            update();
-
-            repaint();
-
-        }
-    }
-
-    public void update() {
-
-    }
-
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR); // untuk
-                                                                                                                    // menjaga
-                                                                                                                    // kualitas
-                                                                                                                    // gambar
-                                                                                                                    // tetap
-                                                                                                                    // tajam
-                                                                                                                    // saat
-                                                                                                                    // diskalakan
-        for (int i = 0; i < maxScreenRow; i++) {
-            for (int j = 0; j < maxScreenCol; j++) {
-                g2.drawImage(Tanah, j * tileSize, i * tileSize, tileSize, tileSize, null);
-
-                if (map1[i][j] == '1') {
-                    g2.drawImage(wall, j * tileSize, i * tileSize, tileSize, tileSize, null);
-                }
-                if (map1[i][j] == '0') {
-                    g2.drawImage(Tanah, j * tileSize, i * tileSize, tileSize, tileSize, null);
-                }
-                if (map1[i][j] == 'S') {
-                    g2.drawImage(playerimg, j * tileSize, i * tileSize, tileSize, tileSize, null);
-                }
-
+            if (delta >= 1) {
+                update();
+                repaint();
+                delta--;
             }
         }
     }
+
+public void update() {
+    if (player != null) {
+        player.update();
+    }
+}
+
+public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2 = (Graphics2D) g;
+    
+    // Gambar Map
+    for (int i = 0; i < maxScreenRow; i++) {
+        for (int j = 0; j < maxScreenCol; j++) {
+            g2.drawImage(Tanah, j * tileSize, i * tileSize, tileSize, tileSize, null);
+            if (map1[i][j] == '1') {
+                g2.drawImage(wall, j * tileSize, i * tileSize, tileSize, tileSize, null);
+            }
+        }
+    }
+
+    // Gambar Player menggunakan method draw dari class Player
+    if (player != null) {
+        player.draw(g2);
+    }
+    
+    g2.dispose();
+}
+
 
     public void loadAssets() {
         Tanah = loadImage("/Assets/lab_tileset_LITE/seperated/tile031.png");
