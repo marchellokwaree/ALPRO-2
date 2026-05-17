@@ -1,6 +1,9 @@
 package Main;
 
 import Entitiy.Player;
+import Obstacle.FireTrap;
+import Obstacle.Obstacle;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -10,6 +13,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -18,7 +23,7 @@ public class GamePanel extends JPanel implements Runnable {
     // Map data
     char map1[][] = {
             { '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', },
-            { '1', 'S', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', },
+            { '1', 'S', 'F', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', },
             { '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', },
             { '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
             { '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '0', '1', },
@@ -42,7 +47,7 @@ public class GamePanel extends JPanel implements Runnable {
     KeyHandler keyH = new KeyHandler();
     Thread gameThread;
     Player player;
-
+    ArrayList<Obstacle> obstacles = new ArrayList<>();
     Image floorTile, wallCenter, playerimg, ExitDoor;
     BufferedImage bufferedImage;
 
@@ -85,6 +90,13 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
         }
+        for (int i = 0; i < maxScreenRow; i++) {
+            for (int j = 0; j < maxScreenCol; j++) {
+                if (map1[i][j] == 'F') {
+                    obstacles.add(new FireTrap(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+            }
+        }
 
         // Pastikan parameter Player sesuai dengan constructor baru di Player.java
         player = new Player(this, keyH, playerimg, startX, startY);
@@ -96,6 +108,10 @@ public class GamePanel extends JPanel implements Runnable {
             this.bufferedImage = loadBufferedImage("/Assets/ASSET/ASSETKARAKTER/AnimationSheet.png");
             if (this.bufferedImage != null) {
                 this.playerimg = bufferedImage.getSubimage(0, 0, 25, 25);
+            }
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/Traps/Fire_Trap.png");
+            if (this.bufferedImage != null) {
+                this.FireTrap = bufferedImage.getSubimage(0, 9, 32, 32);
             }
 
             // Loading Tiles
@@ -210,13 +226,20 @@ public class GamePanel extends JPanel implements Runnable {
                 delta--;
             }
             checkWinCondition();
+            checkDamage();
         }
 
     }
 
     public void update() {
-        if (player != null)
+        if (player != null) {
             player.update();
+        }
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                ((FireTrap) obstacle).update();
+            }
+        }
     }
 
     private boolean hasWallAt(int row, int col) {
@@ -424,6 +447,13 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
 
+        // Gambar semua obstacles, termasuk fire trap animasi
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                ((FireTrap) obstacle).draw(g2);
+            }
+        }
+
         if (player != null)
             player.draw(g2);
         g2.dispose();
@@ -436,6 +466,7 @@ public class GamePanel extends JPanel implements Runnable {
         if (map1[playerTileY][playerTileX] == 'G') {
             WinGame();
         }
+        
     }
 
     protected void WinGame() {
@@ -444,4 +475,24 @@ public class GamePanel extends JPanel implements Runnable {
         System.out.println("Congratulations! You've reached the exit!");
         System.exit(0); // Keluar dari game
     }
+
+
+    protected void checkDamage() {
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                FireTrap fireTrap = (FireTrap) obstacle;
+                if (fireTrap.active && fireTrap.collidesWith(player.x, player.y, tileSize)) {
+                    player.HP--;
+                    
+                    System.out.println("Player hit by fire trap! HP: " + player.HP);
+                    if (player.HP <= 0) {
+                        System.out.println("Game Over! Player has been defeated.");
+                        System.exit(0);
+                    }
+                }
+            }
+        }
+    }
+
+    
 }
