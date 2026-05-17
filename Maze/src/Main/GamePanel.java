@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -45,12 +46,11 @@ public class GamePanel extends JPanel implements Runnable {
     Image floorTile, wallCenter, playerimg, ExitDoor;
     BufferedImage bufferedImage;
 
-    Image wallCornerTopRight , wallCornerBottomRight ,  wallCornerTopLeft , wallCornerBottomLeft;
-    Image wallVertical , wallHorizontal;
+    Image wallCornerTopRight, wallCornerBottomRight, wallCornerTopLeft, wallCornerBottomLeft;
+    Image wallVertical, wallHorizontal;
     Image wallEndLeft, wallEndRight, wallEndTop, wallEndBottom;
     Image wallTUp, wallTDown, wallTLeft, wallTRight, wallTIntersection;
-    Image BearTrap , FireTrap , Heal , Npc , IceTrap; 
-    
+    Image BearTrap, FireTrap, Heal, Npc, IceTrap;
 
     public GamePanel() {
         this.maxScreenCol = map1[0].length;
@@ -124,12 +124,12 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private BufferedImage loadBufferedImage(String path) {
-        try {
-            URL url = getClass().getResource(path);
-            if (url != null) {
-                return ImageIO.read(url);
+        try (InputStream stream = getClass().getResourceAsStream(path)) {
+            if (stream != null) {
+                return ImageIO.read(stream);
             }
-            return ImageIO.read(new File("src" + path));
+            File file = resolveImageFile(path);
+            return ImageIO.read(file);
         } catch (Exception e) {
             System.err.println("Failed to load buffered image: " + path + " -> " + e.getMessage());
             return null;
@@ -142,11 +142,34 @@ public class GamePanel extends JPanel implements Runnable {
             if (url != null) {
                 return new ImageIcon(url).getImage();
             }
-            return new ImageIcon(new File("src" + path).getAbsolutePath()).getImage();
+            File file = resolveImageFile(path);
+            return new ImageIcon(file.getAbsolutePath()).getImage();
         } catch (Exception e) {
             System.err.println("Failed to load image: " + path + " -> " + e.getMessage());
             return null;
         }
+    }
+
+    private File resolveImageFile(String path) {
+        String normalizedPath = path.replace('/', File.separatorChar);
+        String userDir = System.getProperty("user.dir");
+
+        File candidate = new File(userDir + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + File.separator + "Maze" + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        return new File(userDir + File.separator + "src" + normalizedPath);
     }
 
     public int getTileSize() {
