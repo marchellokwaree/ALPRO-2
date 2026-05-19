@@ -213,7 +213,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void run() {
         double drawInterval = 1000000000 / 60;
         double delta = 0;
-        long lastTime = System.nanoTime();
+        long lastTime = System.nanoTime(); // Mendapatkan waktu saat ini dalam nanodetik
 
         while (gameThread != null) {
             long currentTime = System.nanoTime();
