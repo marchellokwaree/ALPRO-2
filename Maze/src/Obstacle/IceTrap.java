@@ -7,42 +7,42 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 public class IceTrap extends Obstacle{
     private BufferedImage spriteSheet;
-    private BufferedImage[] animationFrames = new BufferedImage[14];
+    private BufferedImage[] animationFrames = new BufferedImage[4];
     private int currentFrame = 0;
     private int animationCounter = 0;
-    private final int animationDelay = 6;
+    private final int animationDelay = 100;
     public boolean active = true;
 
     public IceTrap(int x, int y, int width, int height) {
         super(x, y, width, height);
 
         try {
-            this.spriteSheet = loadBufferedImage("/Assets/ASSET/Traps/Ice_Trap.png");
-            int frameWidth = 32;
-            int frameHeight = 32;
+            this.spriteSheet = loadBufferedImage("/Assets/ASSET/Traps/Ice_Trap_2.jpeg");
+            int frameWidth = 120;
+            int frameHeight = 120;
+            int xstart = 67+270;
+            int ystart = 605;
             for (int i = 0; i < animationFrames.length; i++) {
-                int colx = i * frameWidth;
-                animationFrames[i] = spriteSheet.getSubimage(colx, 9, frameWidth, frameHeight);
+                int colx = xstart + (i * frameWidth);
+                if (i == 1) {
+                    colx = 67+135; // Tambahkan 1 pixel untuk frame kedua
+                }
+                if (i == 2) {
+                    colx = 67+270; // Tambahkan 1 pixel untuk frame kedua
+                }
+                if (i == 3) {
+                    colx = 67+405; // Tambahkan 1 pixel untuk frame kedua
+                }
+                animationFrames[i] = spriteSheet.getSubimage(colx, ystart, frameWidth, frameHeight);
             }
+            System.out.println("berhasil memuat 4 item");
         } catch (Exception e) {
             System.out.println("Error loading ice trap image: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private BufferedImage loadBufferedImage(String path) {
-        try {
-            URL url = getClass().getResource(path);
-            if (url == null) {
-                throw new IOException("Resource not found: " + path);
-            }
-            return ImageIO.read(url);
-        } catch (IOException e) {
-            System.out.println("Error loading image: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
+    
 
     public void update() {
         animationCounter++;
@@ -52,11 +52,7 @@ public class IceTrap extends Obstacle{
             if (currentFrame >= animationFrames.length) {
                 currentFrame = 0;
             }
-            if (currentFrame >= 7 && currentFrame <= 9) {
-                active = true;
-            } else {
-                active = false;
-            }
+            active = true;
         }
     }
 

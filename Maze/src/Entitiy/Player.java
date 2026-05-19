@@ -21,7 +21,7 @@ public class Player extends Entity {
     // Variabel Animasi
     int spriteCounter = 0;
     int spriteNum = 1;
-    public int HP = 3;
+    public int HP = 100;
     BufferedImage[] walkImages = new BufferedImage[8]; // Array untuk menyimpan gambar berjalan
 
     // Constructor disesuaikan dengan GamePanel kamu (5 parameter)

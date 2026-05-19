@@ -31,19 +31,7 @@ public class FireTrap extends Obstacle {
         }
     }
 
-    private BufferedImage loadBufferedImage(String path) {
-        try {
-            URL url = getClass().getResource(path);
-            if (url == null) {
-                throw new IOException("Resource not found: " + path);
-            }
-            return ImageIO.read(url);
-        } catch (IOException e) {
-            System.out.println("Error loading image: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
+    
 
     public void update() {
         animationCounter++;

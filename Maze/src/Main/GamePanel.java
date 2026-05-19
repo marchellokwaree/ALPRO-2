@@ -1,8 +1,7 @@
 package Main;
 
 import Entitiy.Player;
-import Obstacle.FireTrap;
-import Obstacle.Obstacle;
+import Obstacle.*;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -23,7 +22,7 @@ public class GamePanel extends JPanel implements Runnable {
     // Map data
     char map1[][] = {
             { '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', },
-            { '1', 'S', 'F', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', },
+            { '1', 'S', 'F', '0', '0', '0', 'I', 'P', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', },
             { '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', },
             { '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
             { '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '0', '1', },
@@ -34,7 +33,7 @@ public class GamePanel extends JPanel implements Runnable {
             { '1', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', },
             { '1', '0', '1', '0', '1', '1', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '1', '1', },
             { '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', },
-            { '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', '1', '0', '1', '1', '1', '1', '1', '1', '0', '1', },
+            { '1', '0', '1', '1', '1', '1', '1', 'D', '1', '1', '1', '0', '1', '1', '1', '1', '1', '1', '0', '1', },
             { '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
             { '1', '0', '1', '0', '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '0', '1', },
             { '1', '0', '1', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '1', },
@@ -95,6 +94,19 @@ public class GamePanel extends JPanel implements Runnable {
                 if (map1[i][j] == 'F') {
                     obstacles.add(new FireTrap(j * tileSize, i * tileSize, tileSize, tileSize));
                 }
+                if (map1[i][j] == 'I') {
+                    obstacles.add(new IceTrap(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+                if (map1[i][j] == 'P') {
+                    obstacles.add(new PressurePlate(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+                if (map1[i][j] == 'D') {
+                    if (map1[i - 1][j] == '1') {
+                        obstacles.add(new Gate(j * tileSize, i * tileSize, tileSize, tileSize, false));
+                    } else if (map1[i][j + 1] == '1') {
+                        obstacles.add(new Gate(j * tileSize, i * tileSize, tileSize, tileSize, true));
+                    }
+                }
             }
         }
 
@@ -112,6 +124,10 @@ public class GamePanel extends JPanel implements Runnable {
             this.bufferedImage = loadBufferedImage("/Assets/ASSET/Traps/Fire_Trap.png");
             if (this.bufferedImage != null) {
                 this.FireTrap = bufferedImage.getSubimage(0, 9, 32, 32);
+            }
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/Traps/Ice_Trap.png");
+            if (this.bufferedImage != null) {
+                this.IceTrap = bufferedImage.getSubimage(32, 150, 32, 32);
             }
 
             // Loading Tiles
@@ -238,6 +254,19 @@ public class GamePanel extends JPanel implements Runnable {
         for (Obstacle obstacle : obstacles) {
             if (obstacle instanceof FireTrap) {
                 ((FireTrap) obstacle).update();
+            }
+            if (obstacle instanceof IceTrap) {
+                ((IceTrap) obstacle).update();
+            }
+            if (obstacle instanceof Gate) {
+                if (!((Gate) obstacle).alrOpen) {
+                    ((Gate) obstacle).update();
+                }
+                ((Gate) obstacle).update();
+            }
+            if (obstacle instanceof PressurePlate) {
+                
+                ((PressurePlate) obstacle).update();
             }
         }
     }
@@ -452,6 +481,15 @@ public class GamePanel extends JPanel implements Runnable {
             if (obstacle instanceof FireTrap) {
                 ((FireTrap) obstacle).draw(g2);
             }
+            if (obstacle instanceof IceTrap) {
+                ((IceTrap) obstacle).draw(g2);
+            }
+            if (obstacle instanceof PressurePlate) {
+                ((PressurePlate) obstacle).draw(g2);
+            }
+            if (obstacle instanceof Gate) {
+                ((Gate) obstacle).draw(g2);
+            }
         }
 
         if (player != null)
@@ -466,7 +504,7 @@ public class GamePanel extends JPanel implements Runnable {
         if (map1[playerTileY][playerTileX] == 'G') {
             WinGame();
         }
-        
+
     }
 
     protected void WinGame() {
@@ -476,14 +514,13 @@ public class GamePanel extends JPanel implements Runnable {
         System.exit(0); // Keluar dari game
     }
 
-
     protected void checkDamage() {
         for (Obstacle obstacle : obstacles) {
             if (obstacle instanceof FireTrap) {
                 FireTrap fireTrap = (FireTrap) obstacle;
                 if (fireTrap.active && fireTrap.collidesWith(player.x, player.y, tileSize)) {
                     player.HP--;
-                    
+
                     System.out.println("Player hit by fire trap! HP: " + player.HP);
                     if (player.HP <= 0) {
                         System.out.println("Game Over! Player has been defeated.");
@@ -491,8 +528,21 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                 }
             }
+            if (obstacle instanceof PressurePlate) {
+                PressurePlate pressurePlate = (PressurePlate) obstacle;
+                if (pressurePlate.collidesWith(player.x, player.y, tileSize)) {
+                    pressurePlate.activate();
+                    for (Obstacle other : obstacles) {
+                        if (other instanceof Gate) {
+                            ((Gate) other).openGate();
+                            ((Gate) other).alrOpen = true;
+                        }
+                    }
+                } else {
+                    pressurePlate.deactivate();
+                }
+            }
         }
     }
 
-    
 }
