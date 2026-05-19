@@ -1,100 +1,223 @@
 package Main;
 
-import javax.swing.JPanel;
-
 import Entitiy.Player;
+import Obstacle.*;
 
-import java.awt.Dimension;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import javax.swing.JPanel;
 
 public class GamePanel extends JPanel implements Runnable {
-
+    // Map data
     char map1[][] = {
             { '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', },
-            { '1', 'S', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', },
-            { '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', },
-            { '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '1', '1', },
-            { '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '0', '1', '0', '1', '1', },
-            { '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '1', '1', },
-            { '1', '1', '1', '0', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', },
-            { '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '1', '1', },
-            { '1', '0', '1', '1', '1', '0', '1', '0', '1', '0', '1', '1', '1', '1', '1', '0', '1', '0', '1', '1', },
-            { '1', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '1', },
+            { '1', 'S', 'F', '0', '0', '0', 'I', 'P', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', },
+            { '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', },
+            { '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
+            { '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '0', '1', },
+            { '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '1', },
+            { '1', '1', '1', '0', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '0', '1', '0', '1', },
+            { '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
+            { '1', '0', '1', '1', '1', '0', '1', 'F', '1', '0', '1', '1', '1', '1', '1', '0', '0', '1', '0', '1', },
+            { '1', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', },
             { '1', '0', '1', '0', '1', '1', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '1', '1', },
-            { '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '1', },
-            { '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '1', '0', '1', '1', },
-            { '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '1', '1', },
-            { '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '1', '1', '1', '1', '0', '1', '0', '1', '1', },
-            { '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', },
-            { '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0', 'N', },
+            { '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', },
+            { '1', '0', '1', '1', '1', '1', '1', 'D', '1', '1', '1', '0', '1', '1', '1', '1', '1', '1', '0', '1', },
+            { '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '1', },
+            { '1', '0', '1', '0', '1', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '1', '0', '1', '0', '1', },
+            { '1', '0', '1', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '1', },
+            { '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', 'G', '1', '0', '1', '0', '1', },
             { '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', } };
 
-    final int originalTileSize = 16;
-    final int scale = 2;
-    final int tileSize = originalTileSize * scale;
-    final int maxScreenCol = map1[0].length;
-    final int maxScreenRow = map1.length;
-    final int screenWidth = tileSize * maxScreenCol;
-    final int screenHeight = tileSize * maxScreenRow;
-    Image Tanah;
-    Image Player;
-    Image NPC;
-    Image wallKananAtas;
-    Image wallKananBawah;
-    Image wallKiriAtas;
-    Image wallKiriBawah;
-    Image wall;
-    Image wallvertical;
-    Image wallhorizontal;
-    Image wallKiri, wallKanan, wallAtas, wallBawah;
+    final int tileSize = 32;
+    int maxScreenCol, maxScreenRow, screenWidth, screenHeight;
+
+    KeyHandler keyH = new KeyHandler();
     Thread gameThread;
     Player player;
-    int playerx, playery;
-    int endx, endy;
+    ArrayList<Obstacle> obstacles = new ArrayList<>();
+    Image floorTile, wallCenter, playerimg, ExitDoor;
     BufferedImage bufferedImage;
 
-    Image playerimg;
+    Image wallCornerTopRight, wallCornerBottomRight, wallCornerTopLeft, wallCornerBottomLeft;
+    Image wallVertical, wallHorizontal;
+    Image wallEndLeft, wallEndRight, wallEndTop, wallEndBottom;
+    Image wallTUp, wallTDown, wallTLeft, wallTRight, wallTIntersection;
+    Image BearTrap, FireTrap, Heal, Npc, IceTrap;
 
     public GamePanel() {
-        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
-        this.setBackground(Color.BLUE);
-        this.setDoubleBuffered(true); // , sebuah teknik yang mencegah kedipan layar dengan merender grafik kompleks
-                                      // dalam buffer di luar layar sebelum menampilkannya.
+        this.maxScreenCol = map1[0].length;
+        this.maxScreenRow = map1.length;
+        this.screenWidth = tileSize * maxScreenCol;
+        this.screenHeight = tileSize * maxScreenRow;
 
+        this.addKeyListener(keyH);
+        this.setFocusable(true);
+        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
+        this.setBackground(Color.BLACK);
+        this.setDoubleBuffered(true);
+
+        loadAssets();
+
+        int startX = 0, startY = 0;
         for (int i = 0; i < maxScreenRow; i++) {
             for (int j = 0; j < maxScreenCol; j++) {
                 if (map1[i][j] == 'S') {
-                    playerx = j * tileSize;
-                    playery = i * tileSize;
-                }
-                if (map1[i][j] == 'N') {
-                    endx = j * tileSize;
-                    endy = i * tileSize;
+                    startX = j * tileSize;
+                    startY = i * tileSize;
                 }
             }
         }
 
-        try {
-            System.out.println(
-                    "Loading bufferedImage from: " + getClass().getResource("/Assets/ASSET/AnimationSheet.png"));
-            bufferedImage = ImageIO.read(getClass().getResourceAsStream("/Assets/ASSET/AnimationSheet.png"));
-            System.out.println("BufferedImage loaded: " + (bufferedImage != null));
-        } catch (Exception e) {
-            System.out.println("Error loading AnimationSheet.png");
-            e.printStackTrace();
+        int endX = 0, endY = 0;
+        for (int i = 0; i < maxScreenRow; i++) {
+            for (int j = 0; j < maxScreenCol; j++) {
+                if (map1[i][j] == 'G') {
+                    endX = j * tileSize;
+                    endY = i * tileSize;
+                }
+            }
+        }
+        for (int i = 0; i < maxScreenRow; i++) {
+            for (int j = 0; j < maxScreenCol; j++) {
+                if (map1[i][j] == 'F') {
+                    obstacles.add(new FireTrap(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+                if (map1[i][j] == 'I') {
+                    obstacles.add(new IceTrap(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+                if (map1[i][j] == 'P') {
+                    obstacles.add(new PressurePlate(j * tileSize, i * tileSize, tileSize, tileSize));
+                }
+                if (map1[i][j] == 'D') {
+                    if (map1[i - 1][j] == '1') {
+                        obstacles.add(new Gate(j * tileSize, i * tileSize, tileSize, tileSize, false));
+                    } else if (map1[i][j + 1] == '1') {
+                        obstacles.add(new Gate(j * tileSize, i * tileSize, tileSize, tileSize, true));
+                    }
+                }
+            }
         }
 
-        loadAssets();
+        // Pastikan parameter Player sesuai dengan constructor baru di Player.java
+        player = new Player(this, keyH, playerimg, startX, startY);
+    }
+
+    public void loadAssets() {
+        try {
+            // Loading Sprite Sheet
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/ASSETKARAKTER/AnimationSheet.png");
+            if (this.bufferedImage != null) {
+                this.playerimg = bufferedImage.getSubimage(0, 0, 25, 25);
+            }
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/Traps/Fire_Trap.png");
+            if (this.bufferedImage != null) {
+                this.FireTrap = bufferedImage.getSubimage(0, 9, 32, 32);
+            }
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/Traps/Ice_Trap.png");
+            if (this.bufferedImage != null) {
+                this.IceTrap = bufferedImage.getSubimage(32, 150, 32, 32);
+            }
+
+            // Loading Tiles
+            this.floorTile = loadImage("/Assets/lab_tileset_LITE/seperated/tile031.png");
+            this.ExitDoor = loadImage("/Assets/lab_tileset_LITE/seperated/tile067.png");
+            this.wallCenter = loadImage("/Assets/lab_tileset_LITE/seperated/tile066.png");
+            this.wallCornerBottomLeft = loadImage("/Assets/lab_tileset_LITE/seperated/tile067.png");
+            this.wallCornerTopLeft = loadImage("/Assets/lab_tileset_LITE/seperated/tile039.png");
+            this.wallCornerBottomRight = loadImage("/Assets/lab_tileset_LITE/seperated/tile071.png");
+            this.wallCornerTopRight = loadImage("/Assets/lab_tileset_LITE/seperated/tile043.png");
+            this.wallVertical = loadImage("/Assets/lab_tileset_LITE/seperated/tile074.png");
+            this.wallHorizontal = loadImage("/Assets/lab_tileset_LITE/seperated/tile033.png");
+            this.wallEndLeft = loadImage("/Assets/lab_tileset_LITE/seperated/tile052.png");
+            this.wallEndRight = loadImage("/Assets/lab_tileset_LITE/seperated/tile047.png");
+            this.wallEndTop = loadImage("/Assets/lab_tileset_LITE/seperated/tile058.png");
+            this.wallEndBottom = loadImage("/Assets/lab_tileset_LITE/seperated/tile066.png");
+            this.wallTUp = loadImage("/Assets/lab_tileset_LITE/seperated/tile042.png");
+            this.wallTDown = loadImage("/Assets/lab_tileset_LITE/seperated/tile041.png");
+            this.wallTLeft = loadImage("/Assets/lab_tileset_LITE/seperated/tile054.png");
+            this.wallTRight = loadImage("/Assets/lab_tileset_LITE/seperated/tile055.png");
+
+        } catch (Exception e) {
+            System.err.println("Error loading assets!");
+            e.printStackTrace();
+        }
+    }
+
+    private BufferedImage loadBufferedImage(String path) {
+        try (InputStream stream = getClass().getResourceAsStream(path)) {
+            if (stream != null) {
+                return ImageIO.read(stream);
+            }
+            File file = resolveImageFile(path);
+            return ImageIO.read(file);
+        } catch (Exception e) {
+            System.err.println("Failed to load buffered image: " + path + " -> " + e.getMessage());
+            return null;
+        }
+    }
+
+    public Image loadImage(String path) {
+        try {
+            URL url = getClass().getResource(path);
+            if (url != null) {
+                return new ImageIcon(url).getImage();
+            }
+            File file = resolveImageFile(path);
+            return new ImageIcon(file.getAbsolutePath()).getImage();
+        } catch (Exception e) {
+            System.err.println("Failed to load image: " + path + " -> " + e.getMessage());
+            return null;
+        }
+    }
+
+    private File resolveImageFile(String path) {
+        String normalizedPath = path.replace('/', File.separatorChar);
+        String userDir = System.getProperty("user.dir");
+
+        File candidate = new File(userDir + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + File.separator + "Maze" + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        return new File(userDir + File.separator + "src" + normalizedPath);
+    }
+
+    public int getTileSize() {
+        return tileSize;
+    }
+
+    public boolean collidesWithWall(int nextX, int nextY) {
+        int left = nextX / tileSize;
+        int right = (nextX + tileSize - 1) / tileSize;
+        int top = nextY / tileSize;
+        int bottom = (nextY + tileSize - 1) / tileSize;
+
+        if (left < 0 || right >= maxScreenCol || top < 0 || bottom >= maxScreenRow)
+            return true;
+        return map1[top][left] == '1' || map1[top][right] == '1' ||
+                map1[bottom][left] == '1' || map1[bottom][right] == '1';
     }
 
     public void startGameThread() {
@@ -104,77 +227,322 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        double drawInterval = 1000000000 / 60;
+        double delta = 0;
+        long lastTime = System.nanoTime(); // Mendapatkan waktu saat ini dalam nanodetik
+
         while (gameThread != null) {
+            long currentTime = System.nanoTime();
+            delta += (currentTime - lastTime) / drawInterval;
+            lastTime = currentTime;
 
-            update();
-
-            repaint();
-
+            if (delta >= 1) {
+                update();
+                repaint();
+                delta--;
+            }
+            checkWinCondition();
+            checkDamage();
         }
+
     }
 
     public void update() {
-
-    }
-
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR); // untuk
-                                                                                                                    // menjaga
-                                                                                                                    // kualitas
-                                                                                                                    // gambar
-                                                                                                                    // tetap
-                                                                                                                    // tajam
-                                                                                                                    // saat
-                                                                                                                    // diskalakan
-        for (int i = 0; i < maxScreenRow; i++) {
-            for (int j = 0; j < maxScreenCol; j++) {
-                g2.drawImage(Tanah, j * tileSize, i * tileSize, tileSize, tileSize, null);
-
-                if (map1[i][j] == '1') {
-                    g2.drawImage(wall, j * tileSize, i * tileSize, tileSize, tileSize, null);
+        if (player != null) {
+            player.update();
+        }
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                ((FireTrap) obstacle).update();
+            }
+            if (obstacle instanceof IceTrap) {
+                ((IceTrap) obstacle).update();
+            }
+            if (obstacle instanceof Gate) {
+                if (!((Gate) obstacle).alrOpen) {
+                    ((Gate) obstacle).update();
                 }
-                if (map1[i][j] == '0') {
-                    g2.drawImage(Tanah, j * tileSize, i * tileSize, tileSize, tileSize, null);
-                }
-                if (map1[i][j] == 'S') {
-                    g2.drawImage(playerimg, j * tileSize, i * tileSize, tileSize, tileSize, null);
-                }
-
+                ((Gate) obstacle).update();
+            }
+            if (obstacle instanceof PressurePlate) {
+                
+                ((PressurePlate) obstacle).update();
             }
         }
     }
 
-    public void loadAssets() {
-        Tanah = loadImage("/Assets/lab_tileset_LITE/seperated/tile031.png");
-
-        NPC = loadImage("/Assets/lab_tileset_LITE/seperated/tile033.png");
-        wallKananAtas = loadImage("/Assets/lab_tileset_LITE/seperated/tile016.png");
-        wallKananBawah = loadImage("/Assets/lab_tileset_LITE/seperated/tile025.png");
-        wallKiriAtas = loadImage("/Assets/lab_tileset_LITE/seperated/tile015.png");
-        wallKiriBawah = loadImage("/Assets/lab_tileset_LITE/seperated/tile024.png");
-        wall = loadImage("/Assets/lab_tileset_LITE/seperated/tile066.png");
-        wallvertical = loadImage("/Assets/lab_tileset_LITE/seperated/tile039.png");
-        wallhorizontal = loadImage("/Assets/lab_tileset_LITE/seperated/tile040.png");
-        wallKiri = loadImage("/Assets/lab_tileset_LITE/seperated/tile055.png");
-        wallKanan = loadImage("/Assets/lab_tileset_LITE/seperated/tile054.png");
-        wallAtas = loadImage("/Assets/lab_tileset_LITE/seperated/tile068.png");
-        wallBawah = loadImage("/Assets/lab_tileset_LITE/seperated/tile041.png");
-        playerimg = bufferedImage.getSubimage(0, 0, 25, 25);
+    private boolean hasWallAt(int row, int col) {
+        if (row < 0 || row >= maxScreenRow || col < 0 || col >= maxScreenCol) {
+            return false;
+        }
+        return map1[row][col] == '1';
     }
 
-    public Image loadImage(String path) {
-        Image img = null;
-        try {
-            img = new ImageIcon(getClass().getResource(path)).getImage();
-        } catch (Exception e) {
-            System.out.println("Error loading image: " + path);
-            e.printStackTrace();
+    private Image getWallImageForTile(int row, int col) {
+        boolean top = hasWallAt(row - 1, col);
+        boolean bottom = hasWallAt(row + 1, col);
+        boolean left = hasWallAt(row, col - 1);
+        boolean right = hasWallAt(row, col + 1);
+
+        // Intersection 4-arah
+        if (top && bottom && left && right) {
+            if (wallTIntersection != null) {
+                return wallTIntersection;
+            } else if (wallVertical != null) {
+                return wallVertical;
+            } else {
+                return wallCenter;
+            }
         }
-        return img;
+
+        // Pertigaan terbuka ke ATAS ┴ (bawah + kiri + kanan)
+        if (bottom && left && right && !top) {
+            if (wallTUp != null) {
+                return wallTUp;
+            } else {
+                return wallHorizontal;
+            }
+        }
+
+        // Pertigaan terbuka ke BAWAH ┬ (atas + kiri + kanan)
+        if (top && left && right && !bottom) {
+            if (wallTDown != null) {
+                return wallTDown;
+            } else {
+                return wallHorizontal;
+            }
+        }
+
+        // Pertigaan terbuka ke KIRI ┤ (atas + bawah + kanan)
+        if (top && bottom && right && !left) {
+            if (wallTLeft != null) {
+                return wallTLeft;
+            } else {
+                return wallVertical;
+            }
+        }
+
+        // Pertigaan terbuka ke KANAN ├ (atas + bawah + kiri)
+        if (top && bottom && left && !right) {
+            if (wallTRight != null) {
+                return wallTRight;
+            } else {
+                return wallVertical;
+            }
+        }
+
+        // --- Straight walls --- (Tidak berubah, sudah benar)
+        if (top && bottom && !left && !right) {
+            if (wallVertical != null) {
+                return wallVertical;
+            } else {
+                return wallCenter;
+            }
+        }
+        if (left && right && !top && !bottom) {
+            if (wallHorizontal != null) {
+                return wallHorizontal;
+            } else {
+                return wallCenter;
+            }
+        }
+
+        // --- Corners --- (DITUKAR untuk visual yang benar)
+        // Jika ada tembok di ATAS dan KANAN, kita butuh pojokan yang visualnya
+        // menghadap ke bawah-kiri.
+        if (top && right && !bottom && !left) {
+            if (wallCornerBottomLeft != null) {
+                return wallCornerBottomLeft;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Jika ada tembok di KANAN dan BAWAH, kita butuh pojokan yang visualnya
+        // menghadap ke atas-kiri.
+        if (right && bottom && !top && !left) {
+            if (wallCornerTopLeft != null) {
+                return wallCornerTopLeft;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Jika ada tembok di BAWAH dan KIRI, kita butuh pojokan yang visualnya
+        // menghadap ke atas-kanan.
+        if (bottom && left && !top && !right) {
+            if (wallCornerTopRight != null) {
+                return wallCornerTopRight;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Jika ada tembok di KIRI dan ATAS, kita butuh pojokan yang visualnya menghadap
+        // ke bawah-kanan.
+        if (left && top && !bottom && !right) {
+            if (wallCornerBottomRight != null) {
+                return wallCornerBottomRight;
+            } else {
+                return wallCenter;
+            }
+        }
+
+        // --- End pieces --- (DITUKAR untuk visual yang benar)
+        // Ujung yang menyambung ke ATAS, butuh gambar ujung yang TERTUTUP (misal:
+        // wallEndBottom)
+        if (top && !bottom && !left && !right) {
+            if (wallEndBottom != null) {
+                return wallEndBottom;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Ujung yang menyambung ke BAWAH, butuh gambar ujung yang TERTUTUP (misal:
+        // wallEndTop)
+        if (bottom && !top && !left && !right) {
+            if (wallEndTop != null) {
+                return wallEndTop;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Ujung yang menyambung ke KIRI, butuh gambar ujung yang TERTUTUP (misal:
+        // wallEndRight)
+        if (left && !right && !top && !bottom) {
+            if (wallEndRight != null) {
+                return wallEndRight;
+            } else {
+                return wallCenter;
+            }
+        }
+        // Ujung yang menyambung ke KANAN, butuh gambar ujung yang TERTUTUP (misal:
+        // wallEndLeft)
+        if (right && !left && !top && !bottom) {
+            if (wallEndLeft != null) {
+                return wallEndLeft;
+            } else {
+                return wallCenter;
+            }
+        }
+
+        // --- Fallback cases --- (Juga disesuaikan agar pojokan tertutup lebih rapi)
+        if ((top && left && right) || (bottom && left && right)) {
+            if (wallHorizontal != null) {
+                return wallHorizontal;
+            } else {
+                return wallCenter;
+            }
+        }
+        if ((left && top && bottom) || (right && top && bottom)) {
+            if (wallVertical != null) {
+                return wallVertical;
+            } else {
+                return wallCenter;
+            }
+        }
+        if (top || bottom || left || right) {
+            if (wallCenter != null) {
+                return wallCenter;
+            } else {
+                return wallHorizontal;
+            }
+        }
+
+        // --- Default Fallback ---
+        if (wallCenter != null) {
+            return wallCenter;
+        } else {
+            return wallHorizontal;
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+
+        for (int i = 0; i < maxScreenRow; i++) {
+            for (int j = 0; j < maxScreenCol; j++) {
+                if (floorTile != null) {
+                    g2.drawImage(floorTile, j * tileSize, i * tileSize, tileSize, tileSize, null);
+                }
+
+                if (map1[i][j] == 'G' && ExitDoor != null) {
+                    g2.drawImage(ExitDoor, j * tileSize, i * tileSize, tileSize, tileSize, null);
+                } else if (map1[i][j] == '1') {
+                    Image wallImage = getWallImageForTile(i, j);
+                    if (wallImage != null) {
+                        g2.drawImage(wallImage, j * tileSize, i * tileSize, tileSize, tileSize, null);
+                    }
+                }
+            }
+        }
+
+        // Gambar semua obstacles, termasuk fire trap animasi
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                ((FireTrap) obstacle).draw(g2);
+            }
+            if (obstacle instanceof IceTrap) {
+                ((IceTrap) obstacle).draw(g2);
+            }
+            if (obstacle instanceof PressurePlate) {
+                ((PressurePlate) obstacle).draw(g2);
+            }
+            if (obstacle instanceof Gate) {
+                ((Gate) obstacle).draw(g2);
+            }
+        }
+
+        if (player != null)
+            player.draw(g2);
+        g2.dispose();
+    }
+
+    protected void checkWinCondition() {
+        int playerTileX = player.x / tileSize;
+        int playerTileY = player.y / tileSize;
+
+        if (map1[playerTileY][playerTileX] == 'G') {
+            WinGame();
+        }
+
+    }
+
+    protected void WinGame() {
+        // Implementasi logika kemenangan, matikan game loop, dan tampilkan pesan
+        // kemenangan
+        System.out.println("Congratulations! You've reached the exit!");
+        System.exit(0); // Keluar dari game
+    }
+
+    protected void checkDamage() {
+        for (Obstacle obstacle : obstacles) {
+            if (obstacle instanceof FireTrap) {
+                FireTrap fireTrap = (FireTrap) obstacle;
+                if (fireTrap.active && fireTrap.collidesWith(player.x, player.y, tileSize)) {
+                    player.HP--;
+
+                    System.out.println("Player hit by fire trap! HP: " + player.HP);
+                    if (player.HP <= 0) {
+                        System.out.println("Game Over! Player has been defeated.");
+                        System.exit(0);
+                    }
+                }
+            }
+            if (obstacle instanceof PressurePlate) {
+                PressurePlate pressurePlate = (PressurePlate) obstacle;
+                if (pressurePlate.collidesWith(player.x, player.y, tileSize)) {
+                    pressurePlate.activate();
+                    for (Obstacle other : obstacles) {
+                        if (other instanceof Gate) {
+                            ((Gate) other).openGate();
+                            ((Gate) other).alrOpen = true;
+                        }
+                    }
+                } else {
+                    pressurePlate.deactivate();
+                }
+            }
+        }
     }
 
 }

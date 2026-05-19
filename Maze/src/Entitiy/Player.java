@@ -1,14 +1,181 @@
 package Entitiy;
 
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
+import javax.imageio.ImageIO;
+
 import Main.GamePanel;
+import Main.KeyHandler;
 
 public class Player extends Entity {
     GamePanel gp;
-    Image img;
+    KeyHandler keyH;
+    Image currentImage;
+    BufferedImage bufferedImage;
+    // Variabel Animasi
+    int spriteCounter = 0;
+    int spriteNum = 1;
+    public int HP = 100;
+    BufferedImage[] walkImages = new BufferedImage[8]; // Array untuk menyimpan gambar berjalan
 
-    public Player(Image img, int x, int y) {
-        super(x, y, 0); // speed default 0
-        this.img = img;
+    // Constructor disesuaikan dengan GamePanel kamu (5 parameter)
+    public Player(GamePanel gp, KeyHandler keyH, Image playerImg, int x, int y) {
+        super(x, y, 2); // speed 2
+        this.gp = gp;
+        this.keyH = keyH;
+        this.currentImage = playerImg;
+        try {
+            this.bufferedImage = loadBufferedImage("/Assets/ASSET/ASSETKARAKTER/AnimationSheet.png");
+            int spriteWidth = 24; // Lebar setiap sprite
+            int spriteHeight = 24; // Tinggi setiap sprite
+            int row2Y = (1 * spriteHeight) + 1; // Y untuk baris kedua
+            if (this.bufferedImage != null) {
+                for (int i = 0; i < 8; i++) {
+                    int colx = i * spriteWidth; // X untuk setiap kolom
+                    walkImages[i] = bufferedImage.getSubimage(colx, row2Y, spriteWidth, spriteHeight);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error loading animation sheet: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void update() {
+        int nextX = x;
+        int nextY = y;
+        boolean moving = false;
+
+        // Cek Input dan tentukan gambar (Bisa dikembangkan per arah jika ada asetnya)
+        if (keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed) {
+            moving = true;
+            if (keyH.upPressed)
+                nextY -= speed;
+            if (keyH.downPressed)
+                nextY += speed;
+            if (keyH.leftPressed)
+                nextX -= speed;
+            if (keyH.rightPressed)
+                nextX += speed;
+        }
+
+        // LOGIKA ANIMASI: Berganti antara spriteNum 1 dan 2 saat bergerak
+        if (moving) {
+            spriteCounter++;
+            if (spriteCounter > 12) { // Kecepatan ganti kaki
+                if (spriteNum == 1) {
+                    spriteNum = 2;
+                } else if (spriteNum == 2) {
+                    spriteNum = 3;
+                } else if (spriteNum == 3) {
+                    spriteNum = 4;
+                } else if (spriteNum == 4) {
+                    spriteNum = 5;
+                } else if (spriteNum == 5) {
+                    spriteNum = 6;
+                } else if (spriteNum == 6) {
+                    spriteNum = 7;
+                } else if (spriteNum == 7) {
+                    spriteNum = 8;
+                } else {
+                    spriteNum = 1; // Kembali ke posisi diam setelah langkah ke-8
+                }
+                spriteCounter = 0;
+            }
+
+            if (spriteNum >= 1 && spriteNum <= 8) {
+                currentImage = walkImages[spriteNum - 1]; // Ganti gambar sesuai dengan spriteNum
+            }
+        } else {
+            spriteNum = 1; // Kembali ke posisi diam jika berhenti
+        }
+
+        // Collision Check
+        if (!gp.collidesWithWall(nextX, y)) {
+            x = nextX;
+        }
+        if (!gp.collidesWithWall(x, nextY)) {
+            y = nextY;
+        }
+    }
+
+    private BufferedImage loadBufferedImage(String path) {
+        try (InputStream stream = getClass().getResourceAsStream(path)) {
+            if (stream != null) {
+                return ImageIO.read(stream);
+            }
+            File file = resolveImageFile(path);
+            return ImageIO.read(file);
+        } catch (IOException e) {
+            System.err.println("Failed to load player buffered image: " + path + " -> " + e.getMessage());
+            return null;
+        }
+    }
+
+    private File resolveImageFile(String path) {
+        String normalizedPath = path.replace('/', File.separatorChar);
+        String userDir = System.getProperty("user.dir");
+
+        File candidate = new File(userDir + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        candidate = new File(userDir + File.separator + "Maze" + File.separator + "src" + normalizedPath);
+        if (candidate.exists()) {
+            return candidate;
+        }
+
+        return new File(userDir + File.separator + "src" + normalizedPath);
+    }
+
+    public void draw(Graphics2D g2) {
+        int drawY = y;
+        Image walkingImage = null;
+
+        // EFEK VISUAL JALAN:
+        // Jika sedang melangkah (spriteNum 2), gambar naik sedikit agar terlihat
+        // seperti melangkah
+        // Jika kamu sudah punya 2 gambar berbeda, kamu bisa mengganti gambarnya di
+        // sini.
+        if (spriteNum == 2) {
+            drawY -= 4;
+            // Ganti ke gambar berjalan
+            walkingImage = walkImages[1]; // Contoh: potongan gambar untuk langkah kedua
+        } else {
+            walkingImage = currentImage; // Gambar diam
+        }
+
+        java.awt.geom.AffineTransform originalTransform = g2.getTransform();
+
+        int width = gp.getTileSize();
+        int height = gp.getTileSize();
+
+        // gambar menghadap ke arah kiri jika bergerak ke kiri
+        if (keyH.leftPressed) {
+            g2.translate(x + width, drawY); // Sesuaikan posisi setelah flip
+            g2.scale(-1, 1); // Flip horizontal
+            if (walkingImage != null) {
+                g2.drawImage(walkingImage, 0, 0, width, height, null);
+            }
+
+        } else {
+            if (walkingImage != null) {
+                g2.drawImage(walkingImage, x, drawY, gp.getTileSize(), gp.getTileSize(), null);
+            }
+
+        }
+        g2.setTransform(originalTransform);
     }
 }
